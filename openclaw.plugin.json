@@ -1,0 +1,76 @@
+{
+  "id": "android-scrcpy",
+  "name": "Android (scrcpy)",
+  "description": "Control a USB-connected Android device via adb + scrcpy (safe wrapper tools).",
+  "version": "0.2.0",
+  "skills": ["skills/android-scrcpy"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": { "type": "boolean", "default": true },
+      "adbPath": { "type": "string", "default": "adb" },
+      "scrcpyPath": { "type": "string", "default": "scrcpy" },
+      "defaultSerial": { "type": "string" },
+      "scrcpy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "noAudio": { "type": "boolean", "default": true },
+          "maxFps": { "type": "integer", "minimum": 1, "maximum": 120, "default": 30 },
+          "bitRate": { "type": "string", "default": "8M" },
+          "windowTitle": { "type": "string" }
+        }
+      },
+      "input": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "maxTextLength": { "type": "integer", "minimum": 1, "maximum": 4000, "default": 256 }
+        }
+      },
+      "apps": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "allow": {
+            "type": "object",
+            "description": "Allowlisted app names -> Android package names (used by nl open_app).",
+            "additionalProperties": { "type": "string" },
+            "default": {}
+          }
+        }
+      },
+      "nl": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": { "type": "boolean", "default": true },
+          "requireConfirmation": { "type": "boolean", "default": true },
+          "maxSteps": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
+          "minStepDelayMs": { "type": "integer", "minimum": 0, "maximum": 5000, "default": 250 },
+          "maxStepsPerMinute": { "type": "integer", "minimum": 1, "maximum": 600, "default": 60 },
+          "llmModel": { "type": "string", "description": "Optional provider/model key for llm-task (e.g. openai-codex/gpt-5.2)." }
+        }
+      }
+    }
+  },
+  "uiHints": {
+    "enabled": { "label": "Enabled" },
+    "adbPath": { "label": "adb path", "placeholder": "adb" },
+    "scrcpyPath": { "label": "scrcpy path", "placeholder": "scrcpy" },
+    "defaultSerial": { "label": "Default device serial", "placeholder": "R58N..." },
+    "scrcpy.noAudio": { "label": "scrcpy: disable audio" },
+    "scrcpy.maxFps": { "label": "scrcpy: max fps" },
+    "scrcpy.bitRate": { "label": "scrcpy: video bitrate" },
+    "scrcpy.windowTitle": { "label": "scrcpy: window title" },
+    "input.maxTextLength": { "label": "Input: max text length" },
+    "apps.allow": { "label": "Allowlisted apps (name -> package)", "advanced": true },
+    "nl.enabled": { "label": "NL: enable" },
+    "nl.requireConfirmation": { "label": "NL: require confirmation" },
+    "nl.maxSteps": { "label": "NL: max steps" },
+    "nl.minStepDelayMs": { "label": "NL: min delay between steps (ms)" },
+    "nl.maxStepsPerMinute": { "label": "NL: max steps per minute" },
+    "nl.llmModel": { "label": "NL: LLM model", "advanced": true }
+  }
+}
