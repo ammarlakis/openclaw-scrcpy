@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { NLPlanSchema, checkPlanSchema, resolveAllowedPackage, resolveCfg, validatePlan } from "../src/core.ts";
+import { checkPlanSchema, resolveAllowedPackage, resolveCfg, validatePlan } from "../src/core.ts";
 
 test("checkPlanSchema accepts a valid plan", () => {
   const plan = {

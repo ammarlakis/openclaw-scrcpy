@@ -6,10 +6,10 @@ import * as path from "node:path";
 import { randomUUID } from "node:crypto";
 
 import {
-  type AndroidScrcpyPluginConfig,
   type Keycode,
   type NLPlan,
   type PluginApi,
+  type ResolvedConfig,
   type ToolParams,
   ToolSchema,
   NLPlanSchema,
@@ -162,7 +162,7 @@ function extractFirstText(content: any): string {
 
 async function llmPlanViaLlmTask(
   api: PluginApi,
-  cfg: Required<AndroidScrcpyPluginConfig>,
+  cfg: ResolvedConfig,
   opts: { instruction: string; screen: { width: number; height: number } },
 ) {
   const allowedApps = Object.entries(cfg.apps.allow).map(([k, v]) => `${k} => ${v}`);
@@ -503,8 +503,6 @@ export default function register(api: PluginApi) {
           }
 
           // mode=execute
-            return { version: 1, goal: "", steps: [] } as any;
-          })();
 
           if (cfg.nl.requireConfirmation) {
             if (!params.confirmToken) {

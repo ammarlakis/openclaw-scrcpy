@@ -36,11 +36,38 @@ export type AndroidScrcpyPluginConfig = {
   };
 };
 
+export type ResolvedConfig = {
+  enabled: boolean;
+  adbPath: string;
+  scrcpyPath: string;
+  defaultSerial: string;
+  scrcpy: {
+    noAudio: boolean;
+    maxFps: number;
+    bitRate: string;
+    windowTitle: string;
+  };
+  input: {
+    maxTextLength: number;
+  };
+  apps: {
+    allow: Record<string, string>;
+  };
+  nl: {
+    enabled: boolean;
+    requireConfirmation: boolean;
+    maxSteps: number;
+    minStepDelayMs: number;
+    maxStepsPerMinute: number;
+    llmModel: string;
+  };
+};
+
 export function isObj(v: unknown): v is Record<string, unknown> {
   return !!v && typeof v === "object" && !Array.isArray(v);
 }
 
-export function resolveCfg(raw: unknown): Required<AndroidScrcpyPluginConfig> {
+export function resolveCfg(raw: unknown): ResolvedConfig {
   const cfg = isObj(raw) ? (raw as AndroidScrcpyPluginConfig) : {};
   return {
     enabled: cfg.enabled ?? true,
@@ -70,7 +97,7 @@ export function resolveCfg(raw: unknown): Required<AndroidScrcpyPluginConfig> {
   };
 }
 
-export function pickSerial(params: { serial?: string }, cfg: Required<AndroidScrcpyPluginConfig>, devices?: string[]) {
+export function pickSerial(params: { serial?: string }, cfg: ResolvedConfig, devices?: string[]) {
   const serial = (params.serial ?? cfg.defaultSerial ?? "").trim();
   if (serial) return serial;
   if (devices && devices.length === 1) return devices[0];
@@ -120,8 +147,8 @@ export function encodeAdbInputText(text: string) {
     .replace(/\}/g, "\\}")
     .replace(/\*/g, "\\*")
     .replace(/\?/g, "\\?")
-    .replace(/\!/g, "\\!")
-    .replace(/\"/g, "\\\"");
+    .replace(/!/g, "\\!")
+    .replace(/"/g, "\\\"");
 }
 
 export const KeycodeSchema = Type.Union([
@@ -272,7 +299,7 @@ export function resolveAllowedPackage(app: string, allow: Record<string, string>
   return "";
 }
 
-export function validatePlan(plan: NLPlan, opts: { maxSteps: number; screen: { width: number; height: number }; cfg: Required<AndroidScrcpyPluginConfig> }) {
+export function validatePlan(plan: NLPlan, opts: { maxSteps: number; screen: { width: number; height: number }; cfg: ResolvedConfig }) {
   if (plan.steps.length > opts.maxSteps) {
     throw new Error(`Plan too long (${plan.steps.length} steps). Max is ${opts.maxSteps}.`);
   }
