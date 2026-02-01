@@ -1,41 +1,59 @@
-# android-scrcpy (OpenClaw plugin)
+# openclaw-scrcpy
 
-Control a USB-connected Android device from OpenClaw using **adb** + **scrcpy**.
+OpenClaw plugin to control a USB-connected Android device using **adb** + **scrcpy**.
 
-- Lists connected devices
-- Starts/stops a scrcpy session (desktop window)
-- Sends input via adb (tap/swipe/text/key)
-- Takes screenshots (PNG)
-- (NEW) Natural-language planning + execution via a validated action plan (`action: "nl"`)
+- Plugin id: `android-scrcpy`
+- Tool name: `android_scrcpy`
+
+## Features
+
+- List connected devices
+- Start/stop a scrcpy mirroring session (desktop window)
+- Send input via adb: tap / swipe / text / key
+- Take screenshots (PNG)
+- Optional **natural-language** planning + execution via a validated action plan (`action: "nl"`)
 
 This plugin intentionally **does not** expose arbitrary shell execution.
 
-## Proposed plugin id
-
-`android-scrcpy`
-
 ## Requirements
 
-Linux host with:
-- `adb` on PATH
-- `scrcpy` on PATH
-- Android device with USB debugging enabled
+### Host OS
 
-## Install (local dev in a workspace)
+- Linux is the primary supported host (tested)
+- macOS / Windows may work if `adb` + `scrcpy` work, but are not CI-tested
 
-This repo places the plugin at:
+### Binaries
 
+You must have these installed and available on `PATH`:
+
+- `adb` (Android platform-tools)
+- `scrcpy`
+
+## Install
+
+Clone into your OpenClaw extensions directory.
+
+Example (Linux):
+
+```bash
+mkdir -p ~/.openclaw/extensions
+cd ~/.openclaw/extensions
+
+git clone https://github.com/ammarlakis/openclaw-scrcpy.git android-scrcpy
 ```
-<workspace>/.openclaw/extensions/android-scrcpy
+
+Notes:
+- The folder name should match the plugin id (`android-scrcpy`) to keep configuration and paths intuitive.
+
+Restart OpenClaw:
+
+```bash
+openclaw gateway restart
 ```
 
-OpenClaw auto-discovers plugins from:
+## Configuration
 
-- `<workspace>/.openclaw/extensions/*/index.ts`
-
-### Enable in config
-
-Edit `~/.openclaw/openclaw.json`:
+Edit your OpenClaw config (typically `~/.openclaw/openclaw.json`):
 
 ```json5
 {
@@ -47,21 +65,40 @@ Edit `~/.openclaw/openclaw.json`:
           adbPath: "adb",
           scrcpyPath: "scrcpy",
           defaultSerial: "",
-          scrcpy: { noAudio: true, maxFps: 30, bitRate: "8M" },
-          // Allowlist apps for `open_app` / `nl` plans
+
+          scrcpy: {
+            noAudio: true,
+            maxFps: 30,
+            bitRate: "8M",
+            windowTitle: "OpenClaw Android"
+          },
+
+          input: {
+            maxTextLength: 256
+          },
+
+          // Allowlist apps for open_app + NL plans
           apps: {
             allow: {
               whatsapp: "com.whatsapp",
               chrome: "com.android.chrome"
             }
           },
+
           nl: {
             enabled: true,
+
+            // Safe default: plan -> confirm -> execute
             requireConfirmation: true,
+
+            // Trusted mode (less safe): plan+execute without confirm token
+            // requireConfirmation: false,
+
             maxSteps: 20,
             minStepDelayMs: 250,
             maxStepsPerMinute: 60,
-            // optional override; otherwise llm-task defaults are used
+
+            // Optional override; otherwise llm-task defaults are used
             llmModel: ""
           }
         }
@@ -71,15 +108,9 @@ Edit `~/.openclaw/openclaw.json`:
 }
 ```
 
-Restart the gateway:
+### Allow the tool for your agent
 
-```bash
-openclaw gateway restart
-```
-
-### Allow the tool
-
-The tool is registered as **optional** (opt-in). Add to your agent allowlist:
+The tool is registered as **optional** (opt-in). Add it to your agent allowlist:
 
 ```json5
 {
@@ -96,23 +127,24 @@ The tool is registered as **optional** (opt-in). Add to your agent allowlist:
 }
 ```
 
-(You can also allow the whole plugin: `"android-scrcpy"`.)
-
 ## Usage
 
 Tool name: `android_scrcpy`
 
 ### List devices
+
 ```json
 { "action": "devices" }
 ```
 
 ### Start scrcpy
+
 ```json
 { "action": "scrcpy_start", "serial": "R58N..." }
 ```
 
 ### Tap / swipe
+
 ```json
 { "action": "tap", "serial": "R58N...", "x": 500, "y": 1200 }
 ```
@@ -122,6 +154,7 @@ Tool name: `android_scrcpy`
 ```
 
 ### Text / key
+
 ```json
 { "action": "text", "serial": "R58N...", "text": "hello world" }
 ```
@@ -131,50 +164,58 @@ Tool name: `android_scrcpy`
 ```
 
 ### Screenshot
+
 ```json
 { "action": "screenshot", "serial": "R58N...", "as": "image" }
 ```
 
 ### Open an app / open a URL / wait
+
 ```json
 { "action": "open_app", "serial": "R58N...", "app": "whatsapp" }
 ```
+
 ```json
 { "action": "open_url", "serial": "R58N...", "url": "https://example.com" }
 ```
+
 ```json
 { "action": "wait", "serial": "R58N...", "ms": 1200 }
 ```
 
-### Natural-language (plan → confirm → execute)
-First generate a plan (default):
+## Natural-language mode (plan → confirm → execute)
+
+Generate a plan (default):
+
 ```json
 { "action": "nl", "serial": "R58N...", "instruction": "Open WhatsApp, open the chat with Ammar, take a screenshot" }
 ```
-The tool returns a JSON object containing a `confirmToken` and the structured `plan`.
 
 Then execute the plan:
+
 ```json
 { "action": "nl", "serial": "R58N...", "mode": "execute", "confirmToken": "<token>", "instruction": "Open WhatsApp, open the chat with Ammar, take a screenshot" }
 ```
 
 Notes:
 - By default, execution requires a `confirmToken` from a previous plan call (`nl.requireConfirmation=true`).
-- The planner is limited to a safe allowlist of actions and an app allowlist (`apps.allow`).
-- Coordinates are bounds-checked using `adb shell wm size`.
+- NL planning uses the **llm-task** plugin/tool (`llm_task`). Ensure `llm-task` is enabled and configured.
 
-## Implementation notes
+## Telegram usage (avoid command duplication)
 
-- Uses `spawn()` (no shell) and a fixed set of adb/scrcpy subcommands.
-- Maintains an in-memory session map for running scrcpy processes.
-- On plugin stop, attempts to terminate any scrcpy sessions.
-- `action: "nl"` uses the **llm-task** plugin (tool name: `llm_task`) to translate natural language into a JSON plan.
-  - Ensure the `llm-task` plugin is enabled and configured with an allowed model.
-  - No raw API keys are embedded in this plugin; it relies on OpenClaw’s model/provider configuration.
+If you are using OpenClaw via Telegram, prefer OpenClaw’s built-in skill routing instead of creating a custom `/android` command.
 
-## Next steps (optional enhancements)
+Use:
 
-- Add `android_scrcpy_stream` using scrcpy `--record` or `--v4l2-sink` for frames.
-- Add richer keycode allowlist or a config-controlled allowlist.
-- Add UI coordinate normalization by querying display size (`adb shell wm size`).
-- Add a dedicated `android_screenshot` tool returning both image + metadata.
+- `/skill android-scrcpy` to load the skill instructions
+- then ask normally, and the agent can call `android_scrcpy` when allowed
+
+This avoids duplicated command namespaces and keeps behaviour consistent across channels.
+
+## Security
+
+See [SECURITY.md](./SECURITY.md) for the threat model and safe defaults.
+
+## License
+
+MIT. See [LICENSE](./LICENSE).
