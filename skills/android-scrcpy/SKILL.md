@@ -102,3 +102,6 @@ Then execute (requires the `confirmToken` returned by the plan call when `nl.req
 - If planning fails: ensure the `llm-task` plugin is enabled/configured and that `apps.allow` includes the app(s) you want to open.
 - If coordinate validation fails: run with scrcpy mirroring to determine screen coordinates, then re-run the instruction with explicit coordinates (e.g. “tap at x=…”).
 - If execution stops mid-plan: rerun `nl` plan to generate a new plan for the current state.
+
+## Telegram note
+If you are using OpenClaw via Telegram, prefer `/skill android-scrcpy` rather than adding a dedicated Telegram slash command for this plugin. This avoids duplicated command namespaces and keeps skills portable across channels.
