@@ -1,12 +1,31 @@
 {
-  "name": "android-scrcpy",
-  "private": true,
-  "version": "0.1.0",
+  "name": "openclaw-scrcpy",
+  "version": "0.2.0",
+  "description": "OpenClaw plugin: control a USB-connected Android device via adb + scrcpy (safe wrapper + optional NL planning).",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ammarlakis/openclaw-scrcpy.git"
+  },
   "openclaw": {
     "extensions": ["./index.ts"]
   },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test --import tsx",
+    "ci": "npm run lint && npm run typecheck && npm test"
+  },
   "dependencies": {
     "@sinclair/typebox": "^0.34.16"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@types/node": "^22.13.4",
+    "eslint": "^9.19.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.22.0"
   }
 }
