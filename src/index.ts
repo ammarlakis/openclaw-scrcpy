@@ -297,7 +297,7 @@ export default function register(api: PluginApi) {
       mode: "image" as const,
       image: {
         data: stdout.toString("base64"),
-        media_type: "image/png",
+        mimeType: "image/png",
       },
     };
   }
@@ -456,7 +456,7 @@ export default function register(api: PluginApi) {
           const mode = params.as ?? "image";
           const out = await execScreenshot(serial, mode);
           if (out.mode === "path") return { content: [{ type: "text", text: JSON.stringify({ ok: true, path: out.path }, null, 2) }] };
-          return { content: [{ type: "image", image: out.image }] };
+          return { content: [{ type: "image", data: out.image.data, mimeType: out.image.mimeType }] };
         }
 
         if (params.action === "nl") {
@@ -581,7 +581,7 @@ export default function register(api: PluginApi) {
 
             const summary = { ok: true, mode: "execute", serial, steps: cached.plan.steps.length, results, screenshots: screenshotPaths };
             if (lastImage) {
-              return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }, { type: "image", image: lastImage }] };
+              return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }, { type: "image", data: lastImage.data, mimeType: lastImage.mimeType }] };
             }
             return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }] };
           }
@@ -651,7 +651,7 @@ export default function register(api: PluginApi) {
           }
 
           const summary = { ok: true, mode: "execute", serial, steps: plan.steps.length, results, screenshots: screenshotPaths };
-          if (lastImage) return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }, { type: "image", image: lastImage }] };
+          if (lastImage) return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }, { type: "image", data: lastImage.data, mimeType: lastImage.mimeType }] };
           return { content: [{ type: "text", text: JSON.stringify(summary, null, 2) }] };
         }
 
